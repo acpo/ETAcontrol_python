@@ -239,19 +239,21 @@ class App(tk.Frame):
         #if DisplayCode = 0 then do time series;  else do spectrum as below
         if self.DisplayCode == 0:
             xdata = []
-            linedata = np.zeros(self.timelimit)
+            linedata = np.zeros(self.timelimit*100) #simulate 10 ms integration time
             linetemp = []
             bkgdata = []
-            
-            for zzz in range(self.timelimit):
+            print(len(linedata))
+            for zzz in range(self.timelimit*100):
                 data = np.array(get_data()) # gets full data
                 #data_line = np.array(data[1,5]) #6th item in second array; spec data will be only one array
-                xdata.append(zzz/2) #correctly appends on each cycle
+                xdata.append(zzz/100) #correctly appends on each cycle
                 linetemp.append(data[1,5])  #correctly appends on each cycle
                 linedata = np.vstack((xdata, linetemp))
-                print(linedata)
-                # Will need to use Blit routine to do incremental drawing, base plt needs whole array filled
-                self.line.set_data(linedata) # something like this
+                #print(linedata)
+                self.line.set_data(linedata) 
+                self.canvas.draw()                  
+# Will need to use Blit routine to do incremental drawing faster 'canvas.draw'
+#  is TOO SLOW
                 
             pass
             #data = *get_data
