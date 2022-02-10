@@ -357,7 +357,6 @@ class App(tk.Frame):
             self.integrationentry.insert(0, int(self.IntTime / 1000))
             messagebox.showerror("Entry error", msg)
 
-        
     def TimeLimit_change(self, event):
         timelimittemp = self.timelimitentry.get()
         try:
