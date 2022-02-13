@@ -12,7 +12,6 @@ from tkinter import Spinbox
 from tkinter import Text
 from tkinter import messagebox
 from tkinter.filedialog import asksaveasfilename
-import csv  #easier file writing
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -29,6 +28,8 @@ import seabreeze.spectrometers as sb
 import numpy as np
 
 import time
+import os #for filename and path handling
+import csv  #easier file writing
 
 # Enumerate spectrometer, set a default integration time, get x & y extents
 try:
@@ -511,13 +512,15 @@ class BlitManager:
         cv.flush_events()
 
 def saveFile(data_time, data_line, data_bkg, data_base):
-    filenameforWriting = asksaveasfilename()  
-    np.savetxt(filenameforWriting, (data_time, data_line), delimiter=',')
-    filenameforWriting = asksaveasfilename() 
-    np.savetxt(filenameforWriting, (data_time, data_bkg), delimiter=',')
-    filenameforWriting = asksaveasfilename() 
-    np.savetxt(filenameforWriting, (data_time, data_base), delimiter=',')
-
+    filenameforWriting = asksaveasfilename(defaultextension=".txt")
+    path_ext = os.path.splitext(filenameforWriting)
+    linefile = str(path_ext[0] + "line" + path_ext[1])
+    bkgfile = str(path_ext[0] + "bkg" + path_ext[1])
+    basefile = str(path_ext[0] + "base" + path_ext[1])
+    np.savetxt(linefile, (data_time, data_line), delimiter=',')
+    np.savetxt(bkgfile, (data_time, data_bkg), delimiter=',')
+    np.savetxt(basefile, (data_time, data_base), delimiter=',')
+    
 def main():
     root = tk.Tk()
     app = App(root)
