@@ -178,7 +178,8 @@ class App(tk.Frame):
         
         #lower status bar
         self.status_frame = tk.Frame(self)
-        self.status = tk.Label(self.status_frame, text="this is the status bar")
+        #self.status = tk.Label(self.status_frame, text="this is the status bar")
+        self.status = tk.Label(self.status_frame, text=spec)
         self.status.pack(fill="both", expand=True)
 
 #set locations of the major areas to the corners of the box
@@ -512,14 +513,18 @@ class BlitManager:
         cv.flush_events()
 
 def saveFile(data_time, data_line, data_bkg, data_base):
-    filenameforWriting = asksaveasfilename(defaultextension=".txt")
-    path_ext = os.path.splitext(filenameforWriting)
-    linefile = str(path_ext[0] + "line" + path_ext[1])
-    bkgfile = str(path_ext[0] + "bkg" + path_ext[1])
-    basefile = str(path_ext[0] + "base" + path_ext[1])
-    np.savetxt(linefile, (data_time, data_line), delimiter=',')
-    np.savetxt(bkgfile, (data_time, data_bkg), delimiter=',')
-    np.savetxt(basefile, (data_time, data_base), delimiter=',')
+    filenameforWriting = asksaveasfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt"),("All files", "*.*")])
+    if not filenameforWriting:
+        print("passed")
+        pass
+    else:
+        path_ext = os.path.splitext(filenameforWriting)
+        linefile = str(path_ext[0] + "line" + path_ext[1])
+        bkgfile = str(path_ext[0] + "bkg" + path_ext[1])
+        basefile = str(path_ext[0] + "base" + path_ext[1])
+        np.savetxt(linefile, (data_time, data_line), delimiter=',')
+        np.savetxt(bkgfile, (data_time, data_bkg), delimiter=',')
+        np.savetxt(basefile, (data_time, data_base), delimiter=',')
     
 def main():
     root = tk.Tk()
