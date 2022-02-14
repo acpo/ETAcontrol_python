@@ -515,7 +515,6 @@ class BlitManager:
 def saveFile(data_time, data_line, data_bkg, data_base):
     filenameforWriting = asksaveasfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt"),("All files", "*.*")])
     if not filenameforWriting:
-        print("passed")
         pass
     else:
         path_ext = os.path.splitext(filenameforWriting)
