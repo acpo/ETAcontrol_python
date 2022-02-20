@@ -476,7 +476,6 @@ class App(tk.Frame):
         #send serial command to start power supply
         return self.update_graph()
 
-
 class BlitManager:
     def __init__(self, canvas, animated_artists=()):
         """
