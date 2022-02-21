@@ -500,6 +500,7 @@ class App(tk.Frame):
         if(ser.isOpen() == False):
             ser.open()
         ser.write(str.encode(GO_string))  #will not read the PS output during the sequence
+        ser.close()
         return self.update_graph()
 
     def readSerial(self):
@@ -620,6 +621,9 @@ def saveFile(data_time, data_line, data_bkg, data_base):
         np.savetxt(bkgfile, (data_time, data_bkg), delimiter=',')
         np.savetxt(basefile, (data_time, data_base), delimiter=',')
 
+
+
+    
 def main():
     root = tk.Tk()
     root.wm_title("Tungsten ETA Data Collection")
