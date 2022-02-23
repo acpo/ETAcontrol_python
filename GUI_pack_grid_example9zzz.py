@@ -1,7 +1,9 @@
 # Functional.  Correctly uses spectrometer values for variables.
 # To do:  serial comms.
 # With 3 lines showing in real time, minimum IntTime is 25ms due to extra drawing overhead
-# Reduced to 2 drawn lines (not drawing Base).  25ms is solid, 24ms is ok but some small random shifts
+# Reduced to 2 drawn lines (not drawing Base).
+# Python 3.6.8:  25ms is solid, 24ms is ok but some small random shifts
+# Python 3.9.10:  15ms is solid  -strong version dependence
 
 try:
     import Tkinter as tk
@@ -68,7 +70,8 @@ class App(tk.Frame):
         self.IntTimeLimits = spec.integration_time_micros_limits #BIGGER RANGE THAN REALLY EXISTS; this is available if needed;reads as tuple
         self.max_intensity = spec.max_intensity  #fullscale limit
         self.timelimit = 5 # time in SECONDS
-
+        self.atomtime = 2.0 # time in SECONDS for start of atomization
+        
         #preload wavelength values
         self.wavelength1 = tk.StringVar(self, self.wavelengths[int(len(self.wavelengths) * 0.8)])
         self.wavelength2 = tk.StringVar(self, self.wavelengths[int(len(self.wavelengths) * 0.7)])
@@ -160,21 +163,27 @@ class App(tk.Frame):
         self.PStext.insert(tk.END, "Some text here \n")
         self.PStext.grid(column=0, row=1, columnspan=2)
         
-        self.PSentrylabel = tk.Label(self.menu_left_lower, text='PS command:')
+        self.PSentrylabel = tk.Label(self.menu_left_lower, text='PS command:', relief = 'ridge')
         self.PSentrylabel.grid(column=0, row=2)
         self.PSentry = tk.Entry(self.menu_left_lower, width='12')
         #will need: self.menu_left_lower.bind('<Return>', self.PSentry_return)
         self.PSentry.grid(column=1, row=2)
-        self.PS_go_label = tk.Label(self.menu_left_lower, text='Start PS and spectro')
+        self.PS_go_label = tk.Label(self.menu_left_lower, text='Start PS and spectro', relief = 'ridge')
         self.PS_go_label.grid(column=0, row=3)
         self.PS_go_button = tk.Button(self.menu_left_lower, text='Measure')
         self.PS_go_button.grid(column=1, row=3)
         self.PS_go_button.bind('<ButtonRelease-1>', self.PS_go)
         self.PSslot = 1
-        self.PS_slot_label = tk.Label(self.menu_left_lower, text='Power Supply memory slot')
+        self.PS_slot_label = tk.Label(self.menu_left_lower, text='Power Supply memory slot', relief = 'ridge')
         self.PS_slot_label.grid(column=0, row=4)
         self.PS_slot = tk.Spinbox(self.menu_left_lower, from_=0, to=7, textvariable=self.PSslot, width=3)
         self.PS_slot.grid(column=1, row=4)
+        self.PS_atomtime_label = tk.Label(self.menu_left_lower, text='Atomization time (s)', relief = 'ridge')
+        self.PS_atomtime_label.grid(column=0, row=5)
+        self.PS_atomtime_entry = tk.Entry(self.menu_left_lower, width = 4)
+        self.PS_atomtime_entry.grid(column=1, row=5)
+        self.PS_atomtime_entry.insert(0, self.atomtime)
+        self.PS_atomtime_entry.bind('<Return>', self.AtomTime_change) and self.PS_atomtime_entry.bind('<Tab>', self.AtomTime_change)
         
         # right display area -- Spectrograph Plot Area
         self.some_title_frame = tk.Frame(self, bg="#dfdfdf")
@@ -190,7 +199,6 @@ class App(tk.Frame):
         
         #lower status bar
         self.status_frame = tk.Frame(self)
-        #self.status = tk.Label(self.status_frame, text="this is the status bar")
         self.status = tk.Label(self.status_frame, text=spec)
         self.status.pack(fill="both", expand=True)
 
@@ -286,7 +294,8 @@ class App(tk.Frame):
             linedata=np.asarray(linedata)
             bkgdata=np.asarray(bkgdata)
             basedata=np.asarray(basedata)
-            #saveFile(xdata, linedata, bkgdata, basedata)
+            #saveFile(xdata, linedata, bkgdata, basedata, self.wavelength1, self.wavelength2, self.wavelength3)
+            #processData(xdata, linedata, bkgdata, basedata, self.atomtime)
 
     def wavelenaction(self):
         self.wavelength1 = self.wavelen1box.get()
@@ -465,6 +474,26 @@ class App(tk.Frame):
         except:  #non numerical entry handler
             self.timelimitentry.delete(0, 'end')
             self.timelimitentry.insert(0, self.timelimit) # reset original time limit to box
+            
+        if self.DisplayCode == 0:
+            self.ax1.set_xlim(-1, self.timelimit*1.05)
+            self.canvas.draw()
+
+    def AtomTime_change(self, event):
+        atomtimetemp = self.PS_atomtime_entry.get()
+        try:
+            float(atomtimetemp)
+            atomtimetemp = float(self.PS_atomtime_entry.get())
+            if atomtimetemp > 0 and atomtimetemp < (self.timelimit):
+                self.atomtime = atomtimetemp
+                self.PS_atomtime_entry.delete(0, 'end')
+                self.PS_atomtime_entry.insert(0, self.atomtime) # set new text in time limit box
+            else:
+                self.PS_atomtime_entry.delete(0, 'end')
+                self.PS_atomtime_entry.insert(0, self.atomtime) # reset original time limit to box
+        except:
+            self.PS_atomtime_entry.delete(0, 'end')
+            self.PS_atomtime_entry.insert(0, self.atomtime) # reset original time limit to box
 
     def PS_go(self, event):
         gc.collect()
@@ -475,6 +504,7 @@ class App(tk.Frame):
         self.PStext.insert(tk.END, "\n")
         #send serial command to start power supply
         return self.update_graph()
+
 
 class BlitManager:
     def __init__(self, canvas, animated_artists=()):
@@ -549,18 +579,39 @@ class BlitManager:
         # let the GUI event loop process anything it has to do
         cv.flush_events()
 
-def saveFile(data_time, data_line, data_bkg, data_base):
+def saveFile(data_time, data_line, data_bkg, data_base, linewave, bkgwave, basewave):
     filenameforWriting = asksaveasfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt"),("All files", "*.*")])
     if not filenameforWriting:
-        pass
+        pass  #exits on Cancel
     else:
         path_ext = os.path.splitext(filenameforWriting)
         linefile = str(path_ext[0] + "line" + path_ext[1])
         bkgfile = str(path_ext[0] + "bkg" + path_ext[1])
         basefile = str(path_ext[0] + "base" + path_ext[1])
-        np.savetxt(linefile, (data_time, data_line), delimiter=',')
-        np.savetxt(bkgfile, (data_time, data_bkg), delimiter=',')
-        np.savetxt(basefile, (data_time, data_base), delimiter=',')
+        specmodel = spec.model
+        lineheader = "#Spectrometer = " + specmodel + "\n#Wavelength = " + linewave + "\n#Analytical Line data \nTime (ms), Count"
+        bkgheader = "#Spectrometer = " + specmodel + "\n#Wavelength = " + bkgwave + "\n#Background data \nTime (ms), Count"
+        baseheader = "#Spectrometer = " + specmodel + "\n#Wavelength = " + basewave + "\n#Baseline data \nTime (ms), Count"
+        np.savetxt(linefile, np.transpose([data_time, data_line]), delimiter=',', header=lineheader, comments='')
+        np.savetxt(bkgfile, np.transpose([data_time, data_bkg]), delimiter=',', header=bkgheader, comments='')
+        np.savetxt(basefile, np.transpose([data_time, data_base]), delimiter=',', header=baseheader, comments='')
+
+def processData(data_time, data_line, data_bkg, data_base, atom_time):
+    pass
+    line_minus_base = data_line - data_base
+    bkg_minus_base = data_bkg - data_base
+    incident_index1 = int(np.searchsorted(data_time, atom_time - 1.2, side='left'))
+    incident_index2 = int(np.searchsorted(data_time, atom_time - 0.05, side='left'))
+    line_incident = np.mean(line_minus_base[incident_index1 : incident_index2]) #need index values of the range 1 second before atomization
+    line_abs = np.log10(line_incident / line_minus_base)
+    bkg_incident = np.mean(bkg_minus_base[incident_index1 : incident_index2])
+    bkg_abs = np.log10(bkg_incident / bkg_minus_base)
+    line_abs_sub = line_abs - bkg_abs
+    print(line_abs_sub)
+    # need to use same path_ext as the saveFile def
+    # could set a "code" that passes to saveFile that saves these correctly
+    # want to save 5 files: minus_base, _abs, and _abs_sub all with same root name as other files
+    # or have one big save for everything
     
 def main():
     root = tk.Tk()
