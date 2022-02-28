@@ -29,7 +29,7 @@ ser.flushInput()
 time.sleep(1)
 
 while True:  #this could be the Serial Read 
-    if ser.inWaiting():
+    if ser.in_waiting():
         line = ser.readline()
         data = line.decode("utf-8").split('\t') #ser.readline returns a binary, convert to string
         print (data[0] + '\t' + data[1])
