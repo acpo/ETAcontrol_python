@@ -9,7 +9,7 @@ while (True):
     # buffer.
     # NB: for PySerial v3.0 or later, use property `in_waiting` instead of
     # function `inWaiting()` below!
-    if (ser.inWaiting() > 0):
+    if (ser.in_waiting() > 0):
         # read the bytes and convert from binary array to ASCII
         data_str = ser.read(ser.in_waiting()).decode('ascii') 
         # print the incoming string without putting a new-line
