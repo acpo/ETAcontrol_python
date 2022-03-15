@@ -28,7 +28,12 @@ bkg_abs = np.log10(bkg_incident / bkg_minus_base)
 line_abs_sub = line_abs - bkg_abs
 #print(line_abs_sub)
 
+#onscreen routine for picking integral points
+
+integral = np.trapz(line_abs_sub[incident_index1 : incident_index2])
+height = np.max(line_abs_sub[incident_index1 : incident_index2])
+print("area = ", integral, "height = ", height)
 
 fig, ax = plt.subplots()
-ax.plot(data_time, line_minus_base)
+ax.plot(data_time, line_abs_sub)
 plt.show()
