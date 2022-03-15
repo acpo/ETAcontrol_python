@@ -1,6 +1,8 @@
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
+#import mplcursors
+from matplotlib.backend_bases import MouseButton
 
 atom_time = 3.86
 
@@ -14,6 +16,12 @@ else:
     print("time mismatch")
     print("line vs bkg difference = ", np.sum(data_line[0] - data_bkg[0]))
     print("line vs base difference = ", np.sum(data_line[0] - data_base[0]))
+
+def on_click(event):
+    x, y = event.x, event.y
+    if event.inaxes:
+        ax = event.inaxes  # the axes instance
+        print('data coords %f %f' % (event.xdata, event.ydata))
 
 data_time = data_line[0]
 line_minus_base = data_line[1] - data_base[1]
@@ -36,4 +44,5 @@ print("area = ", integral, "height = ", height)
 
 fig, ax = plt.subplots()
 ax.plot(data_time, line_abs_sub)
+plt.connect('button_press_event', on_click)
 plt.show()
