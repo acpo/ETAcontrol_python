@@ -16,15 +16,22 @@ except ImportError:
 class MainWindow(tk.Frame):
     def __init__(self, master=None, **kwargs):
         tk.Frame.__init__(self, master, **kwargs)
+        tk.Label(text = "Operations").grid(row=0,column=0)
         self.load_data_button = tk.Button(text = 'Load Data')
-        self.load_data_button.pack()
+        self.load_data_button.grid(row=1,column=0)
         self.load_data_button.bind('<ButtonRelease-1>', self.Load_Data)
         self.atom_time_button = tk.Button(text = 'Select Atomization Time')
-        self.atom_time_button.pack()
+        self.atom_time_button.grid(row=2,column=0)
         self.atom_time_button.bind('<ButtonRelease-1>', self.Atom_Time)
         self.integrate_button = tk.Button(text = 'Integrate')
-        self.integrate_button.pack()
+        self.integrate_button.grid(row=3,column=0)
         self.integrate_button.bind('<ButtonRelease-1>', self.Integrate)
+
+        tk.Label(text = "Show Data").grid(row=0,column=1)
+        self.show_rawdata_button = tk.Button(text = "Show raw data")
+        self.show_rawdata_button.grid(row=1,column=1)
+        self.show_rawdata_button.bind('<ButtonRelease-1>', self.Show_RawData)
+        
 
     def Load_Data(self, event):
         filenames = tk.filedialog.askopenfilename(title = "Load ETA data", filetypes = [("Text file",".txt")], defaultextension='.txt', multiple=True)
@@ -32,39 +39,32 @@ class MainWindow(tk.Frame):
             path_ext = os.path.splitext(file_name)
             if 'line' in file_name:
                 path_ext = os.path.splitext(file_name)
-                linefile = path_ext[0]
-                data_line = np.genfromtxt(str(linefile+path_ext[1]), dtype='float', delimiter=",", comments='#')
+                self.linefile = path_ext[0]
+                self.data_line = np.genfromtxt(str(self.linefile+path_ext[1]), dtype='float', delimiter=",", comments='#')
             if 'bkg' in file_name:
                 path_ext = os.path.splitext(file_name)
-                bkgfile = path_ext[0]
-                data_bkg = np.genfromtxt(str(bkgfile+path_ext[1]), dtype='float', delimiter=",", comments='#')
+                self.bkgfile = path_ext[0]
+                data_bkg = np.genfromtxt(str(self.bkgfile+path_ext[1]), dtype='float', delimiter=",", comments='#')
             if 'base' in file_name:
                 path_ext = os.path.splitext(file_name)
-                basefile = path_ext[0]
-                data_base = np.genfromtxt(str(basefile+path_ext[1]), dtype='float', delimiter=",", comments='#')
+                self.basefile = path_ext[0]
+                data_base = np.genfromtxt(str(self.basefile+path_ext[1]), dtype='float', delimiter=",", comments='#')
 
         #check that the time data matches in each trace
-        if np.sum(data_line[0] - data_bkg[0]) == 0 and np.sum(data_line[0] - data_base[0]) == 0:
+        if np.sum(self.data_line[0] - data_bkg[0]) == 0 and np.sum(self.data_line[0] - data_base[0]) == 0:
             print("time ok")
         else:
             print("time mismatch")
-            print("line vs bkg difference = ", np.sum(data_line[0] - data_bkg[0]))
-            print("line vs base difference = ", np.sum(data_line[0] - data_base[0]))
+            print("line vs bkg difference = ", np.sum(self.data_line[0] - data_bkg[0]))
+            print("line vs base difference = ", np.sum(self.data_line[0] - data_base[0]))
 
-        # process data to absorbance and do 2-line correction method
-        self.data_time = data_line[0]
-        self.line_minus_base = data_line[1] - data_base[1]
+        # process data to remove baseline emission
+        self.data_time = self.data_line[0]
+        self.line_minus_base = self.data_line[1] - data_base[1]
         self.bkg_minus_base = data_bkg[1] - data_base[1]
-#        incident_index1 = int(np.searchsorted(self.data_time, 3 - 1.2, side='left'))
-#        incident_index2 = int(np.searchsorted(self.data_time, 3 - 0.05, side='left'))
-#        line_incident = np.mean(line_minus_base[incident_index1 : incident_index2]) #need index values of the range 1 second before atomization
-#        line_abs = np.log10(line_incident / line_minus_base)
-#        bkg_incident = np.mean(bkg_minus_base[incident_index1 : incident_index2])
-#        bkg_abs = np.log10(bkg_incident / bkg_minus_base)
-#        self.line_abs_sub = line_abs - bkg_abs
         # end data processing
 
-    #onscreen routine for picking integral points
+    #onscreen routine for picking incident emission points and calculating absorbance
     def Atom_Time(self,event):
         fig, ax = plt.subplots()
         ax.plot(self.data_time, self.line_minus_base)
@@ -89,13 +89,24 @@ class MainWindow(tk.Frame):
             output1 = str("\nNumber of values averaged = " + str(x2index - x1index))
             output1 += str("\nMean intensity = " + str(np.around(line_incident, 2)))
             tk.messagebox.showinfo(title="Results calculated", message=output1)
+            # also save the processed files
+            lineabsfile = str(self.linefile + "_abs.txt")  #consider changing to self.path_ext[1] for flexible extension use
+            bkgabsfile = str(self.bkgfile + "_abs.txt")
+            lineabssubfile = str(lineabsfile + "_sub.txt")
+            lineabsheader = "# File " + os.path.basename(self.linefile) + " converted to absorbance with Incident = " + str(np.around(line_incident,2))
+            bkgabsheader = "# File " + os.path.basename(self.bkgfile) + " converted to absorbance with Incident = " + str(np.around(bkg_incident,2))
+            np.savetxt(lineabsfile, np.transpose([self.data_time, line_abs]), delimiter=',', header=lineabsheader, comments='')
+            np.savetxt(bkgabsfile, np.transpose([self.data_time, bkg_abs]), delimiter=',', header=bkgabsheader, comments='')
+            line_abs_subheader = "# File" + os.path.basename(lineabsfile) + " (minus) " + os.path.basename(bkgabsfile)
+            np.savetxt(lineabssubfile, np.transpose([self.data_time, self.line_abs_sub]), delimiter=',', header=line_abs_subheader, comments='')
             #time.sleep(2)
             plt.close()
             
-
+    #onscreen routine for picking integral points
     def Integrate(self, event):
         fig, ax = plt.subplots()
         ax.plot(self.data_time, self.line_abs_sub)
+        plt.axhline(y=0, color='r', alpha=0.5)
         atomtime_selector = SpanSelector(ax, self.Get_Integral,
                          "horizontal",
                          button=[1,3],
@@ -114,29 +125,20 @@ class MainWindow(tk.Frame):
             output1 += str("\nselected time range: " + str(np.around(tmin,3)) + "to " + str(np.around(tmax,3)))
             output1 += str("\ndata spacing (ms) = " + str(np.around(1000*np.mean(np.diff(self.data_time[x1index : x2index])),3)))
             tk.messagebox.showinfo(title="Integration Results", message=output1)
+        plt.close()
+
+    def Show_RawData(self, event):  #consider explicitly passing the data to avoid self.
+        if self.data_line == []:
+            tk.messagebox.showinfo(title="oops!", message="No data loaded yet.")
+
+        else:
+            fig, ax = plt.subplots()
+            ax.plot(self.data_line[0], self.data_line[1])
+            plt.show()
 
 
 
-def selector_callback(tmin, tmax):
-    """
-    Callback for line selection.
-    *tmin* and *tmax* are the press and release events.
-    """
-
-    if tmin != tmax:
-        x1index = int(np.searchsorted(data_time, tmin, side='left'))
-        x2index = int(np.searchsorted(data_time, tmax, side='left'))
-        integral = np.trapz(line_abs_sub[x1index : x2index])
-        height = np.max(line_abs_sub[x1index : x2index])
-        output1 = str("area = " + str(np.around(integral, 4)) + "\nheight = " + str(np.around(height,4)))
-        output1 += str("\nselected time range: " + str(np.around(tmin,3)) + "to " + str(np.around(tmax,3)))
-        output1 += str("\ndata spacing (ms) = " + str(np.around(1000*np.mean(np.diff(data_time[x1index : x2index])),3)))
-        tk.messagebox.showinfo(title="Integration Results", message=output1)
-
-
-
-
-
+        
 """
 build Tk interface
 button for picking atomization time -- open trace and do rectangle selector in its own def
@@ -147,7 +149,7 @@ button to show each trace as separate def
 def main():
     root = tk.Tk()
     app = MainWindow(root)
-    app.pack()
+    app.grid()
     root.mainloop()
 
 if __name__ == '__main__':
