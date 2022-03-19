@@ -51,7 +51,7 @@ class MainWindow(tk.Frame):
         self.BaseLabel.grid(row=7,column=1, sticky='w')
 
     def Load_Data(self, event):
-        filenames = tk.filedialog.askopenfilename(title = "Load ETA data", filetypes = [("Text file",".txt")], defaultextension='.txt', multiple=True)
+        filenames = tk.filedialog.askopenfilename(title = "Load ETA data", filetypes = [("Text file",".txt"),("CSV file",".csv")], defaultextension='.txt', multiple=True)
         for file_name in filenames:
             path_ext = os.path.splitext(file_name)
             if 'line' in file_name:
@@ -69,11 +69,13 @@ class MainWindow(tk.Frame):
 
         #check that the time data matches in each trace
         if np.sum(self.data_line[0] - self.data_bkg[0]) == 0 and np.sum(self.data_line[0] - self.data_base[0]) == 0:
-            print("time ok")
+            pass
+            #print("time ok")
         else:
-            print("time mismatch")
-            print("line vs bkg difference = ", np.sum(self.data_line[0] - self.data_bkg[0]))
-            print("line vs base difference = ", np.sum(self.data_line[0] - self.data_base[0]))
+            #print("time mismatch")
+            #print("line vs bkg difference = ", np.sum(self.data_line[0] - self.data_bkg[0]))
+            #print("line vs base difference = ", np.sum(self.data_line[0] - self.data_base[0]))
+            tk.messagebox.showinfo(title="Something is wrong", message="line vs bkg time difference = " + str(np.sum(self.data_line[0] - self.data_bkg[0])))
 
         # process data to remove baseline emission
         self.data_time = self.data_line[0]
