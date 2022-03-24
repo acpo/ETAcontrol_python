@@ -12,7 +12,6 @@
 #  With v3.9.10  15ms integration can be plotted with all three wavelengths using
 #   a pixel marker using 'markevery=2' for everyother point.
 
-
 try:
     import Tkinter as tk
 except ImportError:
@@ -89,12 +88,11 @@ class App(tk.Frame):
         self.ymin = np.around(min(self.ydata * 0.8), decimals=3) #ymin is the display limit, data_min*0.8 to give a margin
         self.ymax = np.around(max(self.ydata * 1.1), decimals=3)
         self.waveres = np.around(self.wavelengths[1] - self.wavelengths[0], decimals=3)
-        self.IntTime = 25000 #set in microseconds, this is 10ms
+        self.IntTime = 25000 #set in microseconds, this is 25ms
         spec.integration_time_micros(self.IntTime)  #send IntTime to spectrograph
         self.IntTimeLimits = spec.integration_time_micros_limits #BIGGER RANGE THAN REALLY EXISTS; this is available if needed;reads as tuple
         self.max_intensity = spec.max_intensity  #fullscale limit
-        self.timelimit = 5 # time in SECONDS
-        self.atomtime = 2.0 # time in SECONDS for start of atomization
+        self.timelimit = 5 # time in SECONDS, default to 5 s for convenience
         
         #preload wavelength values
         self.wavelength1 = tk.StringVar(self, self.wavelengths[int(len(self.wavelengths) * 0.8)])
@@ -204,7 +202,6 @@ class App(tk.Frame):
         self.PS_slot = tk.Spinbox(self.menu_left_lower, from_=0, to=7, textvariable=self.PSslot, width=3)
         self.PS_slot.grid(column=1, row=4)
 
-        
         # right display area -- Spectrograph Plot Area
         self.some_title_frame = tk.Frame(self, bg="#dfdfdf")
         self.some_title = tk.Label(self.some_title_frame, text="Spectrograph Window", bg="#dfdfdf")
@@ -241,7 +238,7 @@ class App(tk.Frame):
 
 #Axis limits. Get from the spectrograph data
         self.ax1.set_ylim(self.ymin, self.ymax)
-        self.ax1.set_xlim(self.xmin, self.xmax)  # max and min wavelengths from reported (self.xmin, self.xmax)
+        self.ax1.set_xlim(self.xmin, self.xmax) 
         self.ax1.set_xlabel('Wavelength (nm)')
 #Create the line artist objects for Blit
         self.waveline1, = self.ax1.plot([], [], lw=2, color='red', alpha = 0.5)  #create empty objects because these lines are Blit artists
@@ -282,7 +279,7 @@ class App(tk.Frame):
             index1 = np.where(self.wavelengths == float(self.wavelength1))[0]  #array index of the chosen wavelength
             index2 = np.where(self.wavelengths == float(self.wavelength2))[0]
             index3 = np.where(self.wavelengths == float(self.wavelength3))[0]
-            starttime = perf_counter()
+            starttime = perf_counter()  # better quality time counter
             for zzz in range(self.timelimit * int(1000/self.IntTime*1000) + 2):  # 2 extra cycles to catch end of process
                 ydata = np.array(get_intensities()) # gets full data
                 xdata.append(perf_counter() - starttime) # appends elapsed time on each cycle
@@ -305,8 +302,8 @@ class App(tk.Frame):
             #fig2.canvas.manager.show()
         #end diagnostics -----
             self.btn.config(text='Start')
-            gc.collect()
-# save data
+            gc.collect()  # garbage collector
+        # save data
             xdata=np.asarray(xdata)
             linedata=np.asarray(linedata)
             bkgdata=np.asarray(bkgdata)
@@ -320,8 +317,7 @@ class App(tk.Frame):
         self.waveline1.set_data([float(self.wavelength1), float(self.wavelength1)], [self.ymin, self.ymax]) #update line position here to make data loop faster
         self.waveline2.set_data([float(self.wavelength2), float(self.wavelength2)], [self.ymin, self.ymax])
         self.waveline3.set_data([float(self.wavelength3), float(self.wavelength3)], [self.ymin, self.ymax])
-        self.bm.update()
-        # update the line locations with self.bm.update()
+        self.bm.update()   # update the line locations with self.bm.update()
 
     def wavelen_entry(self, event):
         tempwavelen1 = self.wavelen1box.get()
@@ -329,7 +325,7 @@ class App(tk.Frame):
             index_wavelen1 = int(np.searchsorted(self.wavelengths, float(tempwavelen1), side='left'))
             self.wavelength1 = self.wavelengths[index_wavelen1]
             self.wavelen1box.delete(0, 'end')
-            self.wavelen1box.insert(0, self.wavelength1)  #set text in xmin box
+            self.wavelen1box.insert(0, self.wavelength1)  #set text in wavelength1 box
             self.wavelenaction()
         else:
             self.wavelen1box.delete(0, 'end')
@@ -340,7 +336,7 @@ class App(tk.Frame):
             index_wavelen2 = int(np.searchsorted(self.wavelengths, float(tempwavelen2), side='left'))
             self.wavelength2 = self.wavelengths[index_wavelen2]
             self.wavelen2box.delete(0, 'end')
-            self.wavelen2box.insert(0, self.wavelength2)  #set text in xmin box
+            self.wavelen2box.insert(0, self.wavelength2)  #set text in wavelength2 box
             self.wavelenaction()
         else:
             self.wavelen2box.delete(0, 'end')
@@ -351,7 +347,7 @@ class App(tk.Frame):
             index_wavelen3 = int(np.searchsorted(self.wavelengths, float(tempwavelen3), side='left'))
             self.wavelength3 = self.wavelengths[index_wavelen3]
             self.wavelen3box.delete(0, 'end')
-            self.wavelen3box.insert(0, self.wavelength3)  #set text in xmin box
+            self.wavelen3box.insert(0, self.wavelength3)  #set text in wavelength3 box
             self.wavelenaction()
         else:
             self.wavelen3box.delete(0, 'end')
@@ -494,28 +490,13 @@ class App(tk.Frame):
             self.ax1.set_xlim(-1, self.timelimit*1.05)
             self.canvas.draw()
 
-    def AtomTime_change(self, event):
-        atomtimetemp = self.PS_atomtime_entry.get()
-        try:
-            float(atomtimetemp)
-            atomtimetemp = float(self.PS_atomtime_entry.get())
-            if atomtimetemp > 0 and atomtimetemp < (self.timelimit):
-                self.atomtime = atomtimetemp
-                self.PS_atomtime_entry.delete(0, 'end')
-                self.PS_atomtime_entry.insert(0, self.atomtime) # set new text in time limit box
-            else:
-                self.PS_atomtime_entry.delete(0, 'end')
-                self.PS_atomtime_entry.insert(0, self.atomtime) # reset original time limit to box
-        except: #non numerical entry handler
-            self.PS_atomtime_entry.delete(0, 'end')
-            self.PS_atomtime_entry.insert(0, self.atomtime) # reset original time limit to box
-
-    def PS_go(self, event):
+    def PS_go(self, event):  # runs power supply and starts time-based data collection in one click
         gc.collect()
         self.DisplayCode = 1 # simulates button press to go to time series mode
         self.DisplayMode(event)
         self.btn.config(text='Running')
-        GO_string = "R " + self.PS_slot.get()  # sends 'R' as in Rund and the slot number formatted for MasTech powersupply
+        GO_string = "R " + self.PS_slot.get()  # sends 'R' as in Run and the slot number formatted for MasTech powersupply
+        self.PStext.insert(tk.END, "sent: ")
         self.PStext.insert(tk.END, GO_string)
         self.PStext.insert(tk.END, "\n")
         #send serial command to start power supply
@@ -523,9 +504,9 @@ class App(tk.Frame):
             ser.open()
         ser.write(str.encode(GO_string))  # will not read the PS serial output during the sequence
         ser.write(bytes("\r",'utf-8')) # required carriage return for the UART on Cypress PSoC
-        ser.flush()
+        ser.flush()  # flush serial buffer to avoid stray commands
         ser.close()  # really not reading serial during data recording
-        return self.update_graph()
+        return self.update_graph()  #start recording data
 
     def readSerial(self):
         if(ser.isOpen() == False):  # check if serial port is open
