@@ -1,6 +1,4 @@
-## changed the Save process to create data pairs.
 # Functional on all parts.
-# To Do: finish data processing section
 #
 # With 3 lines showing in real time, minimum IntTime is 25ms due to extra drawing overhead
 # Consider not drawing Base data, see commented lines.
@@ -62,7 +60,7 @@ try:
                         writeTimeout = 0
                     ) #ensure non-blocking
 except serial.SerialException:
-    messagebox.showerror("Error", "Error opening serial port.")
+    messagebox.showerror("Error", "Error opening serial port. \nIs PUTTY open?")
     exit()
 except:
     messagebox.showerror("Error", "Other problem with serial port communication")
@@ -73,7 +71,7 @@ def get_wavelengths():
     spec_x = spec.wavelengths()
     return spec_x
 def get_intensities():
-    spec_y = spec.intensities(correct_dark_counts=True, correct_nonlinearity=False) #dark counts might need to be false
+    spec_y = spec.intensities(correct_dark_counts=False, correct_nonlinearity=False) #dark counts might need to be false
     return spec_y
 
 class App(tk.Frame):
@@ -205,12 +203,7 @@ class App(tk.Frame):
         self.PS_slot_label.grid(column=0, row=4)
         self.PS_slot = tk.Spinbox(self.menu_left_lower, from_=0, to=7, textvariable=self.PSslot, width=3)
         self.PS_slot.grid(column=1, row=4)
-        self.PS_atomtime_label = tk.Label(self.menu_left_lower, text='Atomization time (s)', relief = 'ridge')
-        self.PS_atomtime_label.grid(column=0, row=5)
-        self.PS_atomtime_entry = tk.Entry(self.menu_left_lower, width = 4)
-        self.PS_atomtime_entry.grid(column=1, row=5)
-        self.PS_atomtime_entry.insert(0, self.atomtime)
-        self.PS_atomtime_entry.bind('<Return>', self.AtomTime_change) and self.PS_atomtime_entry.bind('<Tab>', self.AtomTime_change)
+
         
         # right display area -- Spectrograph Plot Area
         self.some_title_frame = tk.Frame(self, bg="#dfdfdf")
@@ -290,7 +283,7 @@ class App(tk.Frame):
             index2 = np.where(self.wavelengths == float(self.wavelength2))[0]
             index3 = np.where(self.wavelengths == float(self.wavelength3))[0]
             starttime = perf_counter()
-            for zzz in range(self.timelimit * int(1000/self.IntTime*1000)):
+            for zzz in range(self.timelimit * int(1000/self.IntTime*1000) + 2):  # 2 extra cycles to catch end of process
                 ydata = np.array(get_intensities()) # gets full data
                 xdata.append(perf_counter() - starttime) # appends elapsed time on each cycle
                 linedata.append(float(ydata[index1]))  # append doesn't work on np.arrays (lol)
@@ -300,26 +293,25 @@ class App(tk.Frame):
                 self.bkgdata.set_data(xdata, bkgdata)
                 #self.basedata.set_data(xdata, basedata)  # not usually displayed
                 self.bm.update()  # blit manager call
-            #diagnostics printed to terminal, can be removed ----
-            print("per point = ", str((perf_counter()-starttime)/(self.timelimit * int(1000/self.IntTime*1000))))
-            print("std dev = ", str(np.std(np.diff(xdata))))
-            print("max = ", str(np.amax(np.diff(xdata))))
-            print("# over inttime = ", sum(i>(1.05*self.IntTime/1000000) for i in np.diff(xdata)))
+        #diagnostics printed to terminal, can be removed ----
+            #print("per point = ", str((perf_counter()-starttime)/(self.timelimit * int(1000/self.IntTime*1000))))
+            #print("std dev = ", str(np.std(np.diff(xdata))))
+            #print("max = ", str(np.amax(np.diff(xdata))))
+            #print("# over inttime = ", sum(i>(1.05*self.IntTime/1000000) for i in np.diff(xdata)))
             #print(np.where(np.asarray(xdata)>(self.IntTime/1000)))
-            print(np.diff(xdata))
-            fig2, ax2 = plt.subplots()
-            ax2.plot(xdata[0:len(xdata)-1], np.diff(xdata), 'o')
-            fig2.canvas.manager.show()
-            #end diagnostics -----
+            #print(np.diff(xdata))
+            #fig2, ax2 = plt.subplots()
+            #ax2.plot(xdata[0:len(xdata)-1], np.diff(xdata), 'o')
+            #fig2.canvas.manager.show()
+        #end diagnostics -----
             self.btn.config(text='Start')
             gc.collect()
-#demo of a workable data saving routine and data processing call
+# save data
             xdata=np.asarray(xdata)
             linedata=np.asarray(linedata)
             bkgdata=np.asarray(bkgdata)
             basedata=np.asarray(basedata)
             saveFile(xdata, linedata, bkgdata, basedata, self.wavelength1, self.wavelength2, self.wavelength3)
-            #processData(xdata, linedata, bkgdata, basedata, self.atomtime)
 
     def wavelenaction(self):
         self.wavelength1 = self.wavelen1box.get()
@@ -455,7 +447,7 @@ class App(tk.Frame):
 
     def IntegrationTime(self, event):
         #typically OO spectrometers can't read faster than 4 ms
-        #we don't want integration times too long on accident 
+        #and we don't want integration times too long on accident 
         IntTimeTemp = self.integrationentry.get()
         if IntTimeTemp.isdigit() == True:
             if int(IntTimeTemp) > 5000: # maxIntTime may be up to 60 seconds depending on spectrometer model
@@ -642,30 +634,19 @@ def saveFile(data_time, data_line, data_bkg, data_base, linewave, bkgwave, basew
         bkgfile = str(path_ext[0] + "bkg" + path_ext[1])
         basefile = str(path_ext[0] + "base" + path_ext[1])
         specmodel = spec.model
-        lineheader = "#Spectrometer = " + specmodel + "\n#Wavelength = " + linewave + "\n#Analytical Line data \nTime (ms), Count"
-        bkgheader = "#Spectrometer = " + specmodel + "\n#Wavelength = " + bkgwave + "\n#Background data \nTime (ms), Count"
-        baseheader = "#Spectrometer = " + specmodel + "\n#Wavelength = " + basewave + "\n#Baseline data \nTime (ms), Count"
+        lineheader = "# Spectrometer = " + specmodel + "\n# Wavelength (nm) = " + linewave + "\n# Analytical Line data \n# Time (ms), Count"
+        bkgheader = "# Spectrometer = " + specmodel + "\n# Wavelength (nm) = " + bkgwave + "\n# Background data \n# Time (ms), Count"
+        baseheader = "# Spectrometer = " + specmodel + "\n# Wavelength (nm) = " + basewave + "\n# Baseline data \n# Time (ms), Count"
         np.savetxt(linefile, np.transpose([data_time, data_line]), delimiter=',', newline='\n', header=lineheader, comments='')
         np.savetxt(bkgfile, np.transpose([data_time, data_bkg]), delimiter=',', newline='\n', header=bkgheader, comments='')
         np.savetxt(basefile, np.transpose([data_time, data_base]), delimiter=',', newline='\n', header=baseheader, comments='')
 
-def processData(data_time, data_line, data_bkg, data_base, atom_time):
+def processData():
     pass
-    line_minus_base = data_line - data_base
-    bkg_minus_base = data_bkg - data_base
-    incident_index1 = int(np.searchsorted(data_time, atom_time - 1.2, side='left'))
-    incident_index2 = int(np.searchsorted(data_time, atom_time - 0.05, side='left'))
-    line_incident = np.mean(line_minus_base[incident_index1 : incident_index2]) #need index values of the range 1 second before atomization
-    line_abs = np.log10(line_incident / line_minus_base)
-    bkg_incident = np.mean(bkg_minus_base[incident_index1 : incident_index2])
-    bkg_abs = np.log10(bkg_incident / bkg_minus_base)
-    line_abs_sub = line_abs - bkg_abs
-    print(line_abs_sub)
-    # need to use same path_ext as the saveFile def
-    # could set a "code" that passes to saveFile that saves these correctly
-    # want to save 5 files: minus_base, _abs, and _abs_sub all with same root name as other files
-    # or have one big save for everything
-    
+    # processing is in a separate program file
+    # we could call that module with a button here but separating data collection
+    # from processing is a reasonable separation
+
 def main():
     root = tk.Tk()
     root.wm_title("Tungsten ETA Data Collection")
