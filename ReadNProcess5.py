@@ -39,7 +39,7 @@ class MainWindow(tk.Frame):
         self.show_absdata_button.bind('<ButtonRelease-1>', self.Show_AbsData)
         self.show_absdata_button = tk.Button(text = "Show subtracted absorbance data")
         self.show_absdata_button.grid(row=3,column=1)
-        self.show_absdata_button.bind('<ButtonRelease-1>', self.Show_AbsData)
+        self.show_absdata_button.bind('<ButtonRelease-1>', self.Show_AbsSubData)
 
         tk.Label(text = "Loaded Data", font='bold', fg='blue').grid(row=4,column=0,columnspan=2)
         tk.Label(text = "Line file:").grid(row=5,column=0, sticky='w')
@@ -68,7 +68,7 @@ class MainWindow(tk.Frame):
                 path_ext = os.path.splitext(file_name)
                 self.basefile = path_ext[0]
                 self.data_base = np.genfromtxt(str(self.basefile+path_ext[1]), unpack = True, dtype='float', delimiter=",", comments='#')
-                print(self.data_base)
+
 # need to modify this check for the data pair format
         #check that the time data matches in each trace
         #if np.sum(self.data_line[0] - self.data_bkg[0]) == 0 and np.sum(self.data_line[0] - self.data_base[0]) == 0:
@@ -162,6 +162,7 @@ class MainWindow(tk.Frame):
             ax.plot(self.data_bkg[0], self.data_bkg[1], label="background")
             ax.plot(self.data_base[0], self.data_base[1], label="baseline")
             ax.legend()
+            plt.title("Raw Data")
             plt.show()
 
         except:
@@ -173,7 +174,9 @@ class MainWindow(tk.Frame):
             fig, ax = plt.subplots()
             ax.plot(self.data_time, self.line_abs, label="line")
             ax.plot(self.data_time, self.bkg_abs, label="background")
+            plt.axhline(y=0, color='r', alpha=0.5)
             ax.legend()
+            plt.title("Absorbance data (baseline corrected)")
             plt.show()
 
         except:
@@ -184,7 +187,9 @@ class MainWindow(tk.Frame):
         try:
             fig, ax = plt.subplots()
             ax.plot(self.data_time, self.line_abs_sub, label="background corrected data")
+            plt.axhline(y=0, color='r', alpha=0.5)
             ax.legend()
+            plt.title("Background subtracted absorbance data")
             plt.show()
 
         except:
