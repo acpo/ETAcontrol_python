@@ -201,6 +201,9 @@ class App(tk.Frame):
         self.PS_slot_label.grid(column=0, row=4)
         self.PS_slot = tk.Spinbox(self.menu_left_lower, from_=0, to=7, textvariable=self.PSslot, width=3)
         self.PS_slot.grid(column=1, row=4)
+        self.PS_emergencystop_button = tk.Button(self.menu_left_lower, text='Stop PS', bg='red', fg='white', font='bold')
+        self.PS_emergencystop_button.grid(column=1, row=6)
+        self.PS_emergencystop_button.bind('<ButtonRelease-1>', self.PS_EmergencyStop)
 
         # right display area -- Spectrograph Plot Area
         self.some_title_frame = tk.Frame(self, bg="#dfdfdf")
