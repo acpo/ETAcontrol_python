@@ -535,12 +535,11 @@ class App(tk.Frame):
         ser.flush()  # avoids accidental stray instructions 
         self.readSerial()
 
-     def PS_EmergencyStop(self, event):
+    def PS_EmergencyStop(self, event):
         if(ser.isOpen() == False):  # check if serial port is open
             ser.open()
         self.PStext.insert(tk.END, "sent: ESC \n")  # echos ESC sent
-        ser.write(bytes(27,'utf-8'))  # write to serial as bytes (ascii code 27 is ESC)
-        #ser.write(bytes('\x1b','utf-8'))  # write to serial as bytes (\x1b is also escape)
+        ser.write(bytes('\x1b','utf-8'))  # write to serial as bytes (\x1b is ESC)
         ser.flush()  # avoids accidental stray instructions
         self.readSerial()
 
