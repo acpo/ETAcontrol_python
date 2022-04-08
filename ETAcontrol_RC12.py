@@ -626,9 +626,9 @@ def saveFile(data_time, data_line, data_bkg, data_base, linewave, bkgwave, basew
         bkgfile = str(path_ext[0] + "bkg" + path_ext[1])
         basefile = str(path_ext[0] + "base" + path_ext[1])
         specmodel = spec.model
-        lineheader = "# Spectrometer = " + specmodel + "\n# Wavelength (nm) = " + linewave + "\n# Analytical Line data \n# Time (ms), Count"
-        bkgheader = "# Spectrometer = " + specmodel + "\n# Wavelength (nm) = " + bkgwave + "\n# Background data \n# Time (ms), Count"
-        baseheader = "# Spectrometer = " + specmodel + "\n# Wavelength (nm) = " + basewave + "\n# Baseline data \n# Time (ms), Count"
+        lineheader = "# Spectrometer = " + specmodel + "\n# Wavelength (nm) = " + linewave + "\n# Analytical Line data \n# Time (s), Count"
+        bkgheader = "# Spectrometer = " + specmodel + "\n# Wavelength (nm) = " + bkgwave + "\n# Background data \n# Time (s), Count"
+        baseheader = "# Spectrometer = " + specmodel + "\n# Wavelength (nm) = " + basewave + "\n# Baseline data \n# Time (s), Count"
         np.savetxt(linefile, np.transpose([data_time, data_line]), delimiter=',', newline='\n', header=lineheader, comments='')
         np.savetxt(bkgfile, np.transpose([data_time, data_bkg]), delimiter=',', newline='\n', header=bkgheader, comments='')
         np.savetxt(basefile, np.transpose([data_time, data_base]), delimiter=',', newline='\n', header=baseheader, comments='')
