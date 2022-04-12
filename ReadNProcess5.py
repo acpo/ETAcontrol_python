@@ -135,8 +135,8 @@ class MainWindow(tk.Frame):
             lineabsfile = str(self.linefile + "_abs.txt")  #consider changing to self.path_ext[1] for flexible extension use
             bkgabsfile = str(self.bkgfile + "_abs.txt")
             lineabssubfile = str(lineabsfile + "_sub.txt")
-            lineabsheader = "# File " + os.path.basename(self.linefile) + " converted to absorbance with Incident = " + str(np.around(line_incident,2) + "\n# Time (s), Absorbance")
-            bkgabsheader = "# File " + os.path.basename(self.bkgfile) + " converted to absorbance with Incident = " + str(np.around(bkg_incident,2) + "\n# Time (s), Absorbance")
+            lineabsheader = "# File " + os.path.basename(self.linefile) + " converted to absorbance with Incident = " + str(np.around(line_incident,2)) + "\n# Time (s), Absorbance"
+            bkgabsheader = "# File " + os.path.basename(self.bkgfile) + " converted to absorbance with Incident = " + str(np.around(bkg_incident,2)) + "\n# Time (s), Absorbance"
             np.savetxt(lineabsfile, np.transpose([self.data_time, self.line_abs]), delimiter=',', newline='\n', header=lineabsheader, comments='')
             np.savetxt(bkgabsfile, np.transpose([self.data_time, self.bkg_abs]), delimiter=',', newline='\n', header=bkgabsheader, comments='')
             line_abs_subheader = "# File" + os.path.basename(lineabsfile) + " (minus) " + os.path.basename(bkgabsfile) + "\n# Time (s), Absorbance"
