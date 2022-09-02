@@ -243,6 +243,7 @@ class App(tk.Frame):
         self.ax1.set_ylim(self.ymin, self.ymax)
         self.ax1.set_xlim(self.xmin, self.xmax) 
         self.ax1.set_xlabel('Wavelength (nm)')
+        self.ax1.grid(True, color='0.3', ls='dotted')  # places dark grid on spectrum display
 #Create the line artist objects for Blit
         self.waveline1, = self.ax1.plot([], [], lw=2, color='red', alpha = 0.5)  #create empty objects because these lines are Blit artists
         self.waveline2, = self.ax1.plot([], [], lw=2, color='green', alpha = 0.5)
@@ -394,6 +395,7 @@ class App(tk.Frame):
             self.ax1.set_ylim(self.ymin*0.8, self.ymax*2)  # generous upper limit for signals
             self.ax1.set_xlim(-1, self.timelimit*1.05) #testing limits
             self.ax1.set_xlabel('Time (s)')
+            self.ax1.grid(True)  # places negative space grid on spectrum display
             self.canvas.draw()
             # DisplayCode is also in the 'def update_graph()'
         else:
@@ -402,6 +404,7 @@ class App(tk.Frame):
             self.ax1.set_ylim(self.ymin*0.8, self.ymax*1.1)
             self.ax1.set_xlim(self.xmin, self.xmax)  # max and min wavelengths from reported (self.xmin, self.xmax)
             self.ax1.set_xlabel('Wavelength (nm)')
+            self.ax1.grid(True, color='0.3', ls='dotted')  # places dark grid on spectrum display
             self.canvas.draw()
 
     def Xscale_change(self, event):  #always do both xmin and xmax on change of either
