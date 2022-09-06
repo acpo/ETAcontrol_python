@@ -13,6 +13,7 @@ try:
     import Tkinter as tk
 except ImportError:
     import tkinter as tk
+    import tkinter.filedialog   #seems to be necessary to be explicit about this dialog
 
 class MainWindow(tk.Frame):
     def __init__(self, master=None, **kwargs):
