@@ -181,7 +181,7 @@ class App(tk.Frame):
         #lower menu (use Grid placement)
         self.PSscroll = Scrollbar(self.menu_left_lower)
         self.PSscroll.grid(column=1, row=1, sticky='ns')
-        self.PStext = Text(self.menu_left_lower, width =25, height = 10)
+        self.PStext = Text(self.menu_left_lower, width =25, height = 12)
         self.PStext.insert(tk.END, "Some text here \n")
         self.PStext.grid(column=0, row=1) #, columnspan=2)
         self.PStext.config(yscrollcommand=self.PSscroll.set)
