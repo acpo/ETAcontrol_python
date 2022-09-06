@@ -395,7 +395,7 @@ class App(tk.Frame):
             self.ax1.set_ylim(self.ymin*0.8, self.ymax*2)  # generous upper limit for signals
             self.ax1.set_xlim(-1, self.timelimit*1.05) #testing limits
             self.ax1.set_xlabel('Time (s)')
-            self.ax1.grid(True)  # places negative space grid on spectrum display
+            self.ax1.grid(True, color='1', ls='solid')  # places negative space grid on spectrum display
             self.canvas.draw()
             # DisplayCode is also in the 'def update_graph()'
         else:
