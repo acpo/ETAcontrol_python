@@ -1,6 +1,6 @@
 # ETAcontrol_python
 Python control of an electrothermal atomizer system.  
-The system consists of an Ocean Optics (Ocean Insight) compact spectrometer and a power supply controlled via RS-232 serial connection.  The particular power supply is controlled by a Cypress PSoC 5 chip with custom text codes sent via UART.  Other power supplies that can accept serial connection can be controlled by modifying those commands.  **Update:** A version for controlling a BK Precision 1696 is included as a separate file.  
+The system consists of an Ocean Optics (Ocean Insight) compact spectrometer and a power supply controlled via RS-232 serial connection.  The particular power supply is controlled by a Cypress PSoC 5 chip with custom text codes sent via UART.  Other power supplies that can accept serial connection can be controlled by modifying those commands.  **Update:** A version for controlling a BK Precision 1696 is included as a separate file.  Eventual integration of the two control systems is a goal.  
 This project manages control of a tungsten electrothermal atomizer from a single Python GUI.  Control of hardware and data processing with user interaction are all parts of the goal.  This solution includes:  
   * Serial communication (bidirectional) for hardware control  
   * Spectrometer interaction via SeaBreeze  
