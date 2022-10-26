@@ -59,6 +59,7 @@ try:
                         timeout = 1,
                         writeTimeout = 0
                     ) #ensure non-blocking
+    ConnectState = False
 except serial.SerialException:
     messagebox.showerror("Error", "Error opening serial port. \nIs another connection open?")
     exit()
@@ -192,10 +193,10 @@ class App(tk.Frame):
         #self.PSentry = tk.Entry(self.menu_left_lower, width='10')
         #self.PSentry.bind('<Return>', self.writeSerial)
         #self.PSentry.grid(column=1, row=2)
-        self.PSconnect = tk.Button(text='Connect/Disconnect', bg = "pink", font='bold')
-        self.PSconnect.grid(column=0, row=8, columnspan=2)
+        self.PSconnect = tk.Button(self.menu_left_lower, text='Connect/Disconnect', bg = "pink", font='bold')
+        self.PSconnect.grid(column=0, row=2)#, columnspan=1)
         self.PSconnect.bind('<ButtonRelease-1>', self.Connect_PS)
-        ConnectState = False
+        #ConnectState = False
 
         self.PS_go_label = tk.Label(self.menu_left_lower, text='Start PS and spectro', relief = 'ridge')
         self.PS_go_label.grid(column=0, row=3)
@@ -207,8 +208,10 @@ class App(tk.Frame):
         #self.PS_slot_label.grid(column=0, row=4)
         #self.PS_slot = tk.Spinbox(self.menu_left_lower, from_=0, to=7, textvariable=self.PSslot, width=3)
         #self.PS_slot.grid(column=1, row=4)
+        self.PS_name_label = tk.Label(self.menu_left_lower, text='BK Precision', font='bold')
+        self.PS_name_label.grid(column=0, row=4)
         self.PS_emergencystop_button = tk.Button(self.menu_left_lower, text='Stop PS', bg='red', fg='white', font='bold')
-        self.PS_emergencystop_button.grid(column=1, row=6)
+        self.PS_emergencystop_button.grid(column=1, row=4)
         self.PS_emergencystop_button.bind('<ButtonRelease-1>', self.PS_EmergencyStop)
 
         # right display area -- Spectrograph Plot Area
@@ -504,6 +507,7 @@ class App(tk.Frame):
 
     def Connect_PS(self, event):
         global ConnectState
+        print(ConnectState)
         if ConnectState:  #checks for True
             ConnectState = False
             self.PSconnect.configure(background = 'pink')
@@ -518,10 +522,10 @@ class App(tk.Frame):
                 maxvalues = getMaxVoltCurr(ser)
                 print (maxvalues[1], " amps")
                 print (maxvalues[0], " volts")
-                self.maxVolt = maxvalues[0]
-                self.maxAmp = maxvalues[1]
-                self.maxVoltBox.config(text = maxvalues[0])
-                self.maxAmpBox.config(text = maxvalues[1])
+                #self.maxVolt = maxvalues[0]   These boxes don't exist in this GUI
+                #self.maxAmp = maxvalues[1]
+                #self.maxVoltBox.config(text = maxvalues[0])
+                #self.maxAmpBox.config(text = maxvalues[1])
             except:
                 print("exception")
                 ConnectState = False
@@ -543,38 +547,35 @@ class App(tk.Frame):
             self.PStext.insert(tk.END, GO_string)
             self.PStext.insert(tk.END, "\n")
             sdpWrite("RUNP"+"%02d"%address+"%04d\r"%times, serial)
+            return self.update_graph()  #start recording data
         else:
             self.PStext.insert(tk.END, "no connection")
             self.PStext.insert(tk.END, "\n")
             pass
-        if(ser.isOpen() == False):
-            ser.open()
 
-        return self.update_graph()  #start recording data
-
-    def readSerial(self):
-        if(ser.isOpen() == False):  # check if serial port is open
-            ser.open()
-        if ser.inWaiting() > 0:  # check if bytes are waiting in buffer
-            data_str = ser.read(ser.inWaiting()).decode('ascii') 
-            self.PStext.insert(tk.END, data_str) # insert received data in textbox
-            self.PStext.insert(tk.END, "\n")
-            self.PStext.see(tk.END)
-        time.sleep(0.01)  # tiny pause in case other processes need run
-        #ser.close()  # leave open or communication gets lost, only 'close' is in the PS_go() def
+#    def readSerial(self):
+#        if(ser.isOpen() == False):  # check if serial port is open
+#            ser.open()
+#        if ser.inWaiting() > 0:  # check if bytes are waiting in buffer
+##            data_str = ser.read(ser.inWaiting()).decode('ascii') 
+##            self.PStext.insert(tk.END, data_str) # insert received data in textbox
+##            self.PStext.insert(tk.END, "\n")
+##            self.PStext.see(tk.END)
+##        time.sleep(0.01)  # tiny pause in case other processes need run
+#        #ser.close()  # leave open or communication gets lost, only 'close' is in the PS_go() def
             
-    def writeSerial(self, event):
-        if(ser.isOpen() == False):  # check if serial port is open
-            ser.open()
-        self.PStext.insert(tk.END, "sent: ")  # echos sent data 
-        self.PStext.insert(tk.END, self.PSentry.get()) 
-        self.PStext.insert(tk.END, "\n")
-        datatosend = self.PSentry.get()  # get text string from entry box
-        self.PSentry.delete(0, 'end')  # clear entry box
-        ser.write(bytes(datatosend,'utf-8'))  # write to serial as bytes
-        ser.write(bytes("\r",'utf-8')) #required carriage return for the UART on Cypress PSoC
-        ser.flush()  # avoids accidental stray instructions 
-        self.readSerial()
+##    def writeSerial(self, event):
+##        if(ser.isOpen() == False):  # check if serial port is open
+##            ser.open()
+##        self.PStext.insert(tk.END, "sent: ")  # echos sent data 
+##        self.PStext.insert(tk.END, self.PSentry.get()) 
+##        self.PStext.insert(tk.END, "\n")
+##        datatosend = self.PSentry.get()  # get text string from entry box
+##        self.PSentry.delete(0, 'end')  # clear entry box
+##        ser.write(bytes(datatosend,'utf-8'))  # write to serial as bytes
+##        ser.write(bytes("\r",'utf-8')) #required carriage return for the UART on Cypress PSoC
+##        ser.flush()  # avoids accidental stray instructions 
+##        self.readSerial()
 
     def PS_EmergencyStop(self, event):
         if(ser.isOpen() == False):  # check if serial port is open
@@ -582,7 +583,7 @@ class App(tk.Frame):
         address = 0
         self.PStext.insert(tk.END, "sent: ")
         self.PStext.insert(tk.END, "STOP"+"%02d\r"%address)
-        self.PStext.insert(tk.END, \n")  # echos line feed
+        self.PStext.insert(tk.END, "\n")  # echos line feed
         sdpWrite("STOP"+"%02d\r"%address, ser)
         ser.flush()  # avoids accidental stray instructions
 
@@ -596,10 +597,30 @@ def remoteMode(state, address=0):
     """state - True/False = Enable/Disable"""
     if state == True:
         sdpWrite("SESS"+"%02d"%address+"\r", serial)
-        #print(state)
+        print(state)
     else:
         sdpWrite("ENDS"+"%02d"%address+"\r", serial)
-        #print(state)
+        print(state)
+
+def getMaxVoltCurr(serial, address=0):
+    """Get the maximum voltage and current from the supply. The response is an array: [0] = voltage, [1] = current"""
+    #print("GMAX"+"%02d"%address+"\r", serial)
+    resp = sdpQuery("GMAX"+"%02d"%address+"\r", serial)
+    #return [int(resp[0:3])/10., int(resp[0][3:5])/10.]  #had to edit the parsing for Python 3, see next line
+    return [int(str(int(resp))[0:3])/10., int(str(int(resp))[3:6])/100.]
+
+def sdpQuery(cmd, serial):
+    resp = []
+    notDone = True
+    ser.write(cmd.encode())
+    while(notDone):
+        #r = ser.read_until(terminator=b'\r')  #prior to v3.5
+        r = ser.read_until(expected=b'\r')
+        if(not(len(r) > 0)):
+           notDone = False
+        else:
+            resp.append(r)
+    return resp[0]
 
 class BlitManager:
     def __init__(self, canvas, animated_artists=()):
