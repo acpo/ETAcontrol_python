@@ -546,9 +546,11 @@ class App(tk.Frame):
             self.PStext.insert(tk.END, "sent: ")
             self.PStext.insert(tk.END, GO_string)
             self.PStext.insert(tk.END, "\n")
+            sdpWrite("SOUT"+"%02d"%address+"0\r", serial)  #enables output
             sdpWrite("RUNP"+"%02d"%address+"%04d\r"%times, serial)
             return self.update_graph()  #start recording data
         else:
+            sdpWrite("SOUT"+"%02d"%address+"1\r", serial) #disables output for SAFETY
             self.PStext.insert(tk.END, "no connection")
             self.PStext.insert(tk.END, "\n")
             pass
