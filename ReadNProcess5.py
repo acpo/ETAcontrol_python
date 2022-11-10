@@ -235,11 +235,14 @@ class MainWindow(tk.Frame):
         temp = self.data_voltage[1] / self.data_current[1]
         temp = temp ** 0.8226  #coefficient for 15-volt filament
         temp = (temp * 2759.45) - 51.7749 #coefficient for 15-volt filament
+        # added to deal with 'nan' values  -- problem is due to small voltage offsets in the current probe
+        temp[np.isnan(temp)] = 0
+        # end added part
         self.temperature = self.data_voltage[0], temp
         #voltagefile = str(self.scopefile + "_voltage.txt")  #consider changing to self.path_ext[1] for flexible extension use
         #currentfile = str(self.scopefile + "_current.txt")
         temperaturefile = str(self.scopefile + "_temperature.txt")
-        temperatureheader = "# processed from File " + os.path.basename(self.scopefile) + "using coefficients for 15-volt filament \n# Time (s), Temperature (K)" #do we add coeffient values???
+        temperatureheader = "# processed from File " + os.path.basename(self.scopefile) + "using coefficients for 15-volt filament \n# Time (s), Temperature (K)" #do we add coeffient values to the header???
         np.savetxt(temperaturefile, np.transpose(self.temperature), delimiter=',', newline='\n', header=temperatureheader, comments='')
         
     def Show_ScopeData(self, event):
