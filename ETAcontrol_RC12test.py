@@ -210,13 +210,13 @@ class App(tk.Frame):
         self.PS_emergencystop_button.grid(column=1, row=6)
         self.PS_emergencystop_button.bind('<ButtonRelease-1>', self.PS_EmergencyStop)
         self.PSconnect = tk.Button(self.menu_left_lower, text='Connect/Disconnect', bg = "pink", font='bold')
-        self.PSconnect.grid(column=0, row=6)#, columnspan=1)
+        self.PSconnect.grid(column=0, row=6, pady=10)#, columnspan=1)
         self.PSconnect.bind('<ButtonRelease-1>', self.Connect_PS)
         
-        tk.Label(self.menu_left_lower, text = "COM port", relief = 'sunken').grid(column=0, row=7, pady=10)
+        tk.Label(self.menu_left_lower, text = "COM port", relief = 'sunken').grid(column=0, row=7)
         #tk.Label(text = CommPort, relief = 'groove').grid(column=1, row=11) #use the getComm function below in the Connect/Disconnect function)
         self.ports_box = ttk.Combobox(self.menu_left_lower, values = scanSerial())
-        self.ports_box.grid(column = 1, row = 7)
+        self.ports_box.grid(column = 0, row = 8)
         self.ports_box.bind('<<ComboboxSelected>>', self.on_selectComm)
 
         # right display area -- Spectrograph Plot Area
