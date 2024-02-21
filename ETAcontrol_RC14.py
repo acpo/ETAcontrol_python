@@ -439,7 +439,7 @@ class App(tk.Frame):
                 self.ax1.set_xlim(self.xmin, self.xmax)  # set the new value on plot area
                 self.canvas.draw()
             else:
-                msg = "Minimum wavelength must be greater than " + str(self.xmin) + "nm and maximum smaller than " + str(self.xmax) + "nm.  Also, max greater than min.  You entered: min = " + str(xmintemp) + " nm and max = " + str(xmaxtemp) + " nm."
+                msg = "Minimum wavelength must be greater than " + str(self.xminlimit) + "nm and maximum smaller than " + str(self.xmaxlimit) + "nm.  Also, max greater than min.  You entered: min = " + str(xmintemp) + " nm and max = " + str(xmaxtemp) + " nm."
                 self.xminentry.delete(0, 'end')
                 self.xminentry.insert(0, self.xmin)  #reset original xmin in box
                 self.xmaxentry.delete(0, 'end')
