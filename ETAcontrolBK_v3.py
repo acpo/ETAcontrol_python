@@ -1,5 +1,6 @@
 ## current work:  add explicit Serial connect/disconnect to avoid quit when programming BK
 ## added COM dropbox 16NOV2022 ECN
+## new scalar selection to conform to Numpy > 1.25  21FEB2024 ECN
 
 # Functional on all parts.
 #
@@ -511,9 +512,9 @@ class App(tk.Frame):
             self.canvas.draw()
 
     def Connect_PS(self, event):
-        print("start of def")
-        print(ser.isOpen())
-        print(ser)
+        #print("start of def")
+        #print(ser.isOpen())
+        #print(ser)
         if (ser.isOpen() == True):  #checks if serial port is open
             try:
                 self.PSconnect.configure(background = 'pink')
@@ -531,19 +532,19 @@ class App(tk.Frame):
                 self.PStext.insert(tk.END, str(maxvalues[1]) + " amps maximum \n")
                 self.PStext.insert(tk.END, str(maxvalues[0]) + " volts maximum \n")
             except:
-                self.PStext.insert(tk.END, "is another program using the serial port? \n")
+                self.PStext.insert(tk.END, "Is another program using the serial port? Or no port selected? \n")
                 self.PSconnect.configure(background = 'pink')
-        print("after def")
-        print(ser.isOpen())
+        #print("after def")
+        #print(ser.isOpen())
             
                 
     def on_selectComm(self, event):
         global ser
-        print (ser)
+        #print (ser)
         port = self.ports_box.get()
         ser.port = port
-        print("after get")
-        print(ser)
+        #print("after get")
+        #print(ser)
 
     def PS_go(self, event):  # runs power supply and starts time-based data collection in one click
         gc.collect()
@@ -580,7 +581,7 @@ class App(tk.Frame):
 
 def sdpWrite(cmd, serial):
     ser.write(cmd.encode())
-    #return ser.read_until(terminator=b'\r')  #prior to v3.5
+    #return ser.read_until(terminator=b'\r')  #prior to v3.5 of BK Precision vendor software
     return ser.read_until(expected=b'\r')
 
 def remoteMode(state, address=0):
