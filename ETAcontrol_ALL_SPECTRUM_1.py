@@ -282,37 +282,51 @@ class App(tk.Frame):
             self.bm = BlitManager(self.fig.canvas, [self.linedata, self.bkgdata])#, self.basedata])
             gc.collect()
             xdata = []
-            # alldata will be 3 seconds for atomization window and full spectrum width
-            alldata = np.ndarray(shape=(3 * int(1000/self.IntTime*1000) + 2, len(spec.wavelengths())), dtype=float)
+            linedata = []
+            self.linedata.set_data(xdata, linedata)
+            # alldata will be 4 seconds for atomization window and full spectrum width
+            alldata = np.ndarray(shape=(4 * int(1000/self.IntTime*1000) + 2, len(spec.wavelengths())), dtype=float)
 
             self.canvas.draw() # this draw and the lines above blank the display area before a repeat cycle
+            index1 = np.where(self.wavelengths == float(self.wavelength1))[0]  #array index of the chosen wavelength
             starttime = perf_counter()  # better quality time counter
 
             # Need to count down all but the atomization step
-            time.sleep(self.timelimit - 3)
+            #time.sleep(self.timelimit - 4)
+            for ttt in range((self.timelimit - 4) * int(1000/self.IntTime*1000)):  # show linedata while waiting
+                ydata = np.array(get_intensities()) # gets full data
+                xdata.append(perf_counter() - starttime) # appends elapsed time on each cycle
+                linedata.append(np.ndarray.item(ydata[index1]))  ### NEW scalar extraction conforms to Numpy > 1.25
+                self.linedata.set_data(xdata, linedata)  # update matplotlib line data
+                self.bm.update()  # blit manager call
 
-            for zzz in range(3 * int(1000/self.IntTime*1000) + 2):  # 1 extra cycles to catch end of process
+            #xdata = []
+            #self.canvas.draw()
+            for zzz in range(4 * int(1000/self.IntTime*1000) + 2):  # 1 extra cycles to catch end of process
                 ydata = np.array(get_intensities()) # gets full data
                 xdata.append(perf_counter() - starttime) # appends elapsed time on each cycle
                 alldata[zzz] = ydata #np.array(get_intensities())  # use the loop increment number for array index
-
-                #self.bm.update()  # blit manager call
+                linedata.append(np.ndarray.item(ydata[index1]))  ### NEW scalar extraction conforms to Numpy > 1.25
+                self.linedata.set_data(xdata, linedata)  # update matplotlib line data
+                
+                self.bm.update()  # blit manager call
         #diagnostics printed to terminal, can be removed ----
-            print("per point = ", str((perf_counter()-starttime)/(self.timelimit * int(1000/self.IntTime*1000))))
-            print("std dev = ", str(np.std(np.diff(xdata))))
-            print("max = ", str(np.amax(np.diff(xdata))))
-            print("# over inttime = ", sum(i>(1.05*self.IntTime/1000000) for i in np.diff(xdata)))
-            print(np.where(np.asarray(xdata)>(self.IntTime/1000)))
+            #print("per point = ", str((perf_counter()-starttime)/(self.timelimit * int(1000/self.IntTime*1000))))
+            #print("std dev = ", str(np.std(np.diff(xdata))))
+            #print("max = ", str(np.amax(np.diff(xdata))))
+            #print("# over inttime = ", sum(i>(1.05*self.IntTime/1000000) for i in np.diff(xdata)))
+            #print(np.where(np.asarray(xdata)>(self.IntTime/1000)))
             #print(np.diff(xdata))
-            fig2, ax2 = plt.subplots()
-            ax2.plot(xdata[0:len(xdata)-1], np.diff(xdata), 'o')
-            fig2.canvas.manager.show()
+            #fig2, ax2 = plt.subplots()
+            #ax2.plot(xdata[0:len(xdata)-1], np.diff(xdata), 'o')
+            #fig2.canvas.manager.show()
         #end diagnostics -----
             self.btn.config(text='Start')
             gc.collect()  # garbage collector
         # save data
             xdata=np.asarray(xdata)
-            saveFile(xdata, alldata)
+            atomization_time = (self.timelimit - 4) * int(1000/self.IntTime*1000)  # as an integer index value
+            saveFile(xdata, alldata, atomization_time)
 
     def wavelenaction(self):
         self.wavelength1 = self.wavelen1box.get()
@@ -649,7 +663,7 @@ class BlitManager:
         # let the GUI event loop process anything it has to do
         cv.flush_events()
 
-def saveFile(data_time, alldata):
+def saveFile(data_time, alldata, atom_time):
     filenameforWriting = asksaveasfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt"),("All files", "*.*")])
     if not filenameforWriting:
         pass  #exits on Cancel
@@ -661,6 +675,7 @@ def saveFile(data_time, alldata):
         # get wavelengths (columns) and time (rows) values to append to Counts matrix
         wavelengths = get_wavelengths()
         alldata = np.row_stack((wavelengths, alldata))
+        data_time = data_time[atom_time :]  # from time - 4 to end as an integer index
         data_time = np.insert(data_time, 0, 0)
         alldata = np.column_stack((data_time, alldata))
         np.savetxt("all", alldata, delimiter=',', newline='\n', header=allheader, comments='')
