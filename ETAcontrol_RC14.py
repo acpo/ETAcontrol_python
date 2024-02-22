@@ -521,16 +521,15 @@ class App(tk.Frame):
         else:
             ser.close()
             self.PStext.insert(tk.END, "disconnected serial \n")
-            print("tried to close serial")
+            #print("tried to close serial")
             self.PSconnect.configure(background = 'pink')
                
     def on_selectComm(self, event):
-        global ser
-        print (ser)
+        #print (ser)
         port = self.ports_box.get()
         ser.port = port
-        print("after get")
-        print(ser)
+        #print("after get")
+        #print(ser)
 ## end addition
     def PS_go(self, event):  # runs power supply and starts time-based data collection in one click
         gc.collect()
