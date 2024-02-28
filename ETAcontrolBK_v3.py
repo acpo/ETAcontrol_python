@@ -560,6 +560,7 @@ class App(tk.Frame):
             self.PStext.insert(tk.END, "sent: ")
             self.PStext.insert(tk.END, GO_string)
             self.PStext.insert(tk.END, "\n")
+            sdpWrite("SOUT"+"%02d"%address+"0\r", serial) # connects outputs on BK 1696
             sdpWrite("RUNP"+"%02d"%address+"%04d\r"%times, serial)
             return self.update_graph()  #start recording data
         else:
