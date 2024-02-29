@@ -678,7 +678,7 @@ def saveFile(data_time, alldata, atom_time):
         data_time = data_time[atom_time :]  # from time - 4 to end as an integer index
         data_time = np.insert(data_time, 0, 0)
         alldata = np.column_stack((data_time, alldata))
-        np.savetxt("all", alldata, delimiter=',', newline='\n', header=allheader, comments='')
+        np.savetxt(allfile, alldata, delimiter=',', newline='\n', header=allheader, comments='')
 
 
 def processData():
