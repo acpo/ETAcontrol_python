@@ -8,6 +8,8 @@
 ## 04/2023 Added ability to open prior temperature data.
 ## 02/2024 Added ability to swap data columns in temperature calculation
 #  to address probe setups that swap current and voltage positions.
+## 03/2024 Minimum integration interval decreased to 0.04 s to accommodate
+#  fast pulse methods.
 
 import os
 import time
@@ -186,7 +188,7 @@ class MainWindow(tk.Frame):
                          "horizontal",
                          button=[1,3],
                          props=dict(alpha=0.5, facecolor="tab:blue"),
-                         minspan = 0.1, #must pick more than 0.1 second width
+                         minspan = 0.04, #must pick more than 0.04 second width
                          interactive=True)
         plt.show()
 
